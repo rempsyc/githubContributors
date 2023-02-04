@@ -1,11 +1,20 @@
 Package: githubContributors
-Title: What the Package Does (One Line, Title Case)
+Title: Ordering authorships for R packages hosted on GitHub
 Version: 0.0.0.9000
 Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"),
-           comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
+    person(given = "Rémi", 
+             family = "Thériault",
+             role = c("aut", "cre"), 
+             email = "remi.theriault@mail.mcgill.ca",
+             comment = c(ORCID = "0000-0003-4315-6788", Twitter = "@rempsyc"))
+Description: Easily obtain and order GitHub user contributions, which
+  helps with ordering authorships for R packages.
 License: MIT + file LICENSE
+Imports:
+    httr2,
+    tidyr,
+    dplyr,
+    stringr
 Suggests: 
     testthat (>= 3.0.0)
 Config/testthat/edition: 3

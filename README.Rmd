@@ -16,41 +16,53 @@ knitr::opts_chunk$set(
 # githubContributors
 
 <!-- badges: start -->
-[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
-[![CRAN status](https://www.r-pkg.org/badges/version/githubContributors)](https://CRAN.R-project.org/package=githubContributors)
 <!-- badges: end -->
 
-The goal of githubContributors is to ...
+The goal of githubContributors is to help obtain and order GitHub user contributions, which can be used for example to determine or inform authorship order for R packages.
 
 ## Installation
 
 You can install the development version of githubContributors like so:
 
 ``` r
-# FILL THIS IN! HOW CAN PEOPLE INSTALL YOUR DEV PACKAGE?
+# If package `remotes` isn't already installed, install it with `install.packages("remotes")`
+remotes::install_github("rempsyc/githubContributors")
 ```
 
 ## Example
 
-This is a basic example which shows you how to solve a common problem:
+Here are a few examples for easystats or other teams:
 
 ```{r example}
 library(githubContributors)
-## basic example code
+
+report <- get_contributions("report", user = "easystats")
+order_authors(report)
+
+datawizard <- get_contributions("datawizard", user = "easystats")
+order_authors(datawizard)
+
+performance <- get_contributions("performance", user = "easystats")
+order_authors(performance)
+
+performance <- get_contributions("lavaan", user = "yrosseel")
+order_authors(performance)
+
+performance <- get_contributions("dplyr", user = "tidyverse")
+order_authors(performance)
+
+performance <- get_contributions("ggplot2", user = "tidyverse")
+order_authors(performance)
+
 ```
 
-What is special about using `README.Rmd` instead of just `README.md`? You can include R chunks like so:
+## Troubleshooting
 
-```{r cars}
-summary(cars)
+If you get the following error:
+
+```
+Error in `resp_body_raw()`:
+! Can not retrieve empty body
 ```
 
-You'll still need to render `README.Rmd` regularly, to keep `README.md` up-to-date. `devtools::build_readme()` is handy for this. You could also use GitHub Actions to re-render `README.Rmd` every time you push. An example workflow can be found here: <https://github.com/r-lib/actions/tree/v1/examples>.
-
-You can also embed plots, for example:
-
-```{r pressure, echo = FALSE}
-plot(pressure)
-```
-
-In that case, don't forget to commit and push the resulting figure files, so they display on GitHub and CRAN.
+Please visit the GitHub page on a browser to manually update the data. Once the new data is loaded, try again, it should work.
