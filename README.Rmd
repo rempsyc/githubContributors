@@ -66,3 +66,7 @@ Error in `resp_body_raw()`:
 ```
 
 Please visit the GitHub page on a browser to manually update the data. Once the new data is loaded, try again, it should work.
+
+## Credits
+
+Most of the code for this package was contributed by [StackOverFlow user Chamkrai](https://stackoverflow.com/questions/75277192/how-can-i-web-scrape-github-project-contributor-information-in-r/75277425#75277425).
