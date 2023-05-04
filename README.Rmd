@@ -45,14 +45,14 @@ order_authors(datawizard)
 performance <- get_contributions("performance", user = "easystats")
 order_authors(performance)
 
-performance <- get_contributions("lavaan", user = "yrosseel")
-order_authors(performance)
+lavaan <- get_contributions("lavaan", user = "yrosseel")
+order_authors(lavaan)
 
-performance <- get_contributions("dplyr", user = "tidyverse")
-order_authors(performance)
+dplyr <- get_contributions("dplyr", user = "tidyverse")
+order_authors(dplyr)
 
-performance <- get_contributions("ggplot2", user = "tidyverse")
-order_authors(performance)
+ggplot2 <- get_contributions("ggplot2", user = "tidyverse")
+order_authors(ggplot2)
 
 ```
 
