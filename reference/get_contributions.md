@@ -32,11 +32,5 @@ code, deleted lines of code, and number of commits.
 
 ``` r
 head(get_contributions("report"))
-#>                             username  added deleted commit
-#> 1                  DominiqueMakowski 204185  148413    328
-#> 2                     IndrajeetPatil  15387   10883    192
-#> 3                      LukasWallrich      1       1      1
-#> 4                           M-Colley      3       3      1
-#> 5                         Olexandr88      1       1      1
-#> 6 apps/copilot-pull-request-reviewer   2561     956      1
+#> Error in resp_body_raw(resp): Can't retrieve empty body.
 ```
