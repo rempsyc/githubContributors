@@ -7,7 +7,8 @@
 order_authors(data, commit.weight = 0, cutoff = 1000)
 }
 \arguments{
-\item{data}{data}
+\item{data}{A data frame or a named list of data frames (as returned by
+\code{get_contributions()} when multiple repositories are provided).}
 
 \item{commit.weight}{A multiplication constant representing the weight the
 number of commits should have (setting it to 0, the default, will make it
@@ -17,9 +18,11 @@ have no impact).}
 filtered list.}
 }
 \value{
-A data frame with username of contributor, number of added lines of code,
-deleted lines of code, number of commits, and a total 'score' column
-representing the sum of the other columns.
+When a single data frame is provided, a data frame with username of
+contributor, number of added lines of code, deleted lines of code, number
+of commits, and a total 'score' column representing the sum of the other
+columns. When a list of data frames is provided, a named list of data
+frames with the same structure.
 }
 \description{
 Order GitHub authors based on contributions (obtained from \code{get_contributions()}).

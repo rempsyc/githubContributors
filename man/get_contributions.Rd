@@ -10,13 +10,17 @@ https://stackoverflow.com/a/75277425/9370662
 get_contributions(repo, user = "easystats")
 }
 \arguments{
-\item{repo}{repository}
+\item{repo}{A character vector of one or more repository names. When multiple
+repositories are provided (e.g., \code{c("report", "insight")}), the function
+returns a named list of data frames.}
 
 \item{user}{username}
 }
 \value{
-A data frame with username of contributor, number of added lines of code,
-deleted lines of code, and number of commits.
+When a single repository is provided, a data frame with username of
+contributor, number of added lines of code, deleted lines of code, and
+number of commits. When multiple repositories are provided, a named list
+of data frames, one for each repository.
 }
 \description{
 Get GitHub contributions, which can then be ordered with \code{order_authors()}.
