@@ -71,6 +71,6 @@ order_authors_single <- function(data, commit.weight, cutoff) {
   data$score <- data$added + abs(data$deleted) + data$commit * commit.weight
   data <- data[order(data$score, decreasing = TRUE), ]
   data <- data[data$score >= cutoff, ]
-  cat(toString(data$username), "\n\n")
+  cat(insight::format_message(toString(data$username)), "\n\n")
   data
 }
