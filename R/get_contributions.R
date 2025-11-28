@@ -17,6 +17,18 @@
 #' @export
 
 get_contributions <- function(repo, user = "easystats") {
+  # Input validation
+  if (length(repo) == 0) {
+    stop("'repo' must contain at least one repository name.", call. = FALSE)
+  }
+
+  if (any(is.na(repo))) {
+    stop("'repo' contains NA values. Please provide valid repository names.", call. = FALSE)
+  }
+  if (any(repo == "")) {
+    stop("'repo' contains empty strings. Please provide valid repository names.", call. = FALSE)
+  }
+
   if (length(repo) > 1) {
     results <- lapply(repo, function(r) get_contributions_single(r, user))
     names(results) <- repo
