@@ -23,10 +23,16 @@ get_contributions <- function(repo, user = "easystats") {
   }
 
   if (any(is.na(repo))) {
-    stop("'repo' contains NA values. Please provide valid repository names.", call. = FALSE)
+    stop(
+      "'repo' contains NA values. Please provide valid repository names.",
+      call. = FALSE
+    )
   }
   if (any(repo == "")) {
-    stop("'repo' contains empty strings. Please provide valid repository names.", call. = FALSE)
+    stop(
+      "'repo' contains empty strings. Please provide valid repository names.",
+      call. = FALSE
+    )
   }
 
   if (length(repo) > 1) {
