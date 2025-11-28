@@ -12,6 +12,7 @@
 #'   of data frames, one for each repository.
 #' @source https://stackoverflow.com/a/75277425/9370662
 #'
+#' @importFrom rlang .data
 #' @examples
 #' head(get_contributions("report"))
 #' @export
@@ -136,8 +137,11 @@ get_contributions_single <- function(repo, user) {
 
   body |>
     tidyr::unnest(dplyr::everything()) |>
-    dplyr::group_by(username = stringr::str_remove(path, "/")) |>
-    dplyr::summarise(dplyr::across("a":"c", sum), .groups = "drop") |>
+    dplyr::group_by(username = stringr::str_remove(.data$path, "/")) |>
+    dplyr::summarise(
+      dplyr::across(dplyr::all_of(c("a", "c", "d")), sum),
+      .groups = "drop"
+    ) |>
     dplyr::arrange(
       dplyr::desc(.data$a),
       dplyr::desc(.data$d),
