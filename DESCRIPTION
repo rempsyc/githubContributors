@@ -1,6 +1,6 @@
 Package: githubContributors
 Title: Ordering authorships for R packages hosted on GitHub
-Version: 0.0.0.9000
+Version: 0.0.1
 Authors@R: 
     person(given = "Rémi", 
              family = "Thériault",
@@ -14,7 +14,8 @@ Imports:
     httr2,
     tidyr,
     dplyr,
-    stringr
+    stringr,
+    chromote
 Suggests: 
     testthat (>= 3.0.0)
 Config/testthat/edition: 3

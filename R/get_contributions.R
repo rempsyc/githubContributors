@@ -14,12 +14,90 @@
 
 get_contributions <- function(repo, user = "easystats") {
   path <- NULL
-  paste0("https://github.com/", user, "/", repo, "/graphs/contributors-data") |>
+  contributors_url <- paste0(
+    "https://github.com/",
+    user,
+    "/",
+    repo,
+    "/graphs/contributors"
+  )
+
+  resp <- paste0(contributors_url, "-data") |>
     httr2::request() |>
-    httr2::req_headers("x-requested-with" = "XMLHttpRequest",
-                       accept = "appliacation/json") |>
-    httr2::req_perform() |>
-    httr2::resp_body_json(simplifyVector = TRUE, check_type = FALSE) |>
+    httr2::req_headers(
+      "x-requested-with" = "XMLHttpRequest",
+      accept = "appliacation/json"
+    ) |>
+    httr2::req_perform()
+
+  manual_attempt <- paste(
+    "Please visit the following URL in ",
+    "your browser to manually trigger a data refresh:\n\n  ",
+    contributors_url,
+    "\n\nOnce the page finishes loading, run this function again."
+  )
+
+  body <- tryCatch(
+    httr2::resp_body_json(resp, simplifyVector = TRUE, check_type = FALSE),
+    error = function(e) {
+      if (grepl("empty body", e$message, ignore.case = TRUE)) {
+        # Try to trigger refresh using chromote if available
+
+        message(
+          "GitHub returned an empty response. Attempting automatic refresh using chromote..."
+        )
+        b <- NULL
+        tryCatch(
+          {
+            b <- chromote::ChromoteSession$new()
+            b$Page$navigate(contributors_url)
+            b$Page$loadEventFired()
+            Sys.sleep(5)
+            message(
+              "Refresh triggered. Please wait a minute and try again."
+            )
+            NULL
+          },
+          error = function(chromote_error) {
+            message("Chromote failed: ", chromote_error$message)
+          },
+          finally = {
+            if (!is.null(b)) {
+              tryCatch(b$close(), error = function(e) NULL)
+            }
+          }
+        )
+      } else {
+        stop(e, call. = FALSE)
+      }
+    }
+  )
+
+  # If body is NULL (chromote triggered refresh), retry the request
+  if (is.null(body)) {
+    resp <- paste0(contributors_url, "-data") |>
+      httr2::request() |>
+      httr2::req_headers(
+        "x-requested-with" = "XMLHttpRequest",
+        accept = "appliacation/json"
+      ) |>
+      httr2::req_perform()
+
+    body <- tryCatch(
+      httr2::resp_body_json(resp, simplifyVector = TRUE, check_type = FALSE),
+      error = function(e) {
+        stop(
+          "GitHub returned an empty response. Please visit the following URL in ",
+          "your browser to manually trigger a data refresh:\n\n  ",
+          contributors_url,
+          "\n\nOnce the page finishes loading, run this function again.",
+          call. = FALSE
+        )
+      }
+    )
+  }
+
+  body |>
     tidyr::unnest(dplyr::everything()) |>
     dplyr::group_by(username = stringr::str_remove(path, "/")) |>
     dplyr::summarise(dplyr::across("a":"c", sum)) |>
