@@ -30,6 +30,13 @@ get_contributions <- function(repo, user = "easystats") {
     ) |>
     httr2::req_perform()
 
+  manual_attempt <- paste(
+    "Please visit the following URL in ",
+    "your browser to manually trigger a data refresh:\n\n  ",
+    contributors_url,
+    "\n\nOnce the page finishes loading, run this function again."
+  )
+
   body <- tryCatch(
     httr2::resp_body_json(resp, simplifyVector = TRUE, check_type = FALSE),
     error = function(e) {
@@ -46,7 +53,10 @@ get_contributions <- function(repo, user = "easystats") {
             b$Page$navigate(contributors_url)
             b$Page$loadEventFired()
             Sys.sleep(5)
-            message("Refresh triggered. Retrying request...")
+            message(
+              "Refresh triggered. Please wait a minute and try again. Alternatively: ",
+              manual_attempt
+            )
             return(NULL)
           },
           error = function(chromote_error) {
@@ -60,10 +70,8 @@ get_contributions <- function(repo, user = "easystats") {
         )
 
         stop(
-          "GitHub returned an empty response. Please visit the following URL in ",
-          "your browser to manually trigger a data refresh:\n\n  ",
-          contributors_url,
-          "\n\nOnce the page finishes loading, run this function again.",
+          "GitHub returned an empty response. ",
+          manual_attempt,
           call. = FALSE
         )
       } else {
