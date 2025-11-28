@@ -2,10 +2,14 @@
 #'
 #' Get GitHub contributions, which can then be ordered with `order_authors()`.
 #'
-#' @param repo repository
+#' @param repo A character vector of one or more repository names. When multiple
+#'   repositories are provided (e.g., `c("report", "insight")`), the function
+#'   returns a named list of data frames.
 #' @param user username
-#' @return A data frame with username of contributor, number of added lines of code,
-#' deleted lines of code, and number of commits.
+#' @return When a single repository is provided, a data frame with username of
+#'   contributor, number of added lines of code, deleted lines of code, and
+#'   number of commits. When multiple repositories are provided, a named list
+#'   of data frames, one for each repository.
 #' @source https://stackoverflow.com/a/75277425/9370662
 #'
 #' @examples
@@ -13,6 +17,18 @@
 #' @export
 
 get_contributions <- function(repo, user = "easystats") {
+  if (length(repo) > 1) {
+    results <- lapply(repo, function(r) get_contributions_single(r, user))
+    names(results) <- repo
+    return(results)
+  }
+
+  get_contributions_single(repo, user)
+}
+
+#' Get contributions for a single repository (internal helper)
+#' @noRd
+get_contributions_single <- function(repo, user) {
   path <- NULL
   contributors_url <- paste0(
     "https://github.com/",
