@@ -71,49 +71,41 @@ get_contributions_single <- function(repo, user) {
     "\n\nOnce the page finishes loading, run this function again."
   )
 
+  # helper defined earlier (from previous message)
+  # refresh_with_chromote <- function(contributors_url) ...
+
+  refreshed <- FALSE
+
   body <- tryCatch(
     httr2::resp_body_json(resp, simplifyVector = TRUE, check_type = FALSE),
     error = function(e) {
-      if (grepl("empty body", e$message, ignore.case = TRUE)) {
-        # Try to trigger refresh using chromote if available
-
-        message(
-          "GitHub returned an empty response. Attempting automatic refresh using chromote..."
-        )
-        b <- NULL
-        tryCatch(
-          {
-            b <- chromote::ChromoteSession$new()
-            b$Page$navigate(contributors_url)
-            b$Page$loadEventFired()
-            Sys.sleep(5)
-            message(
-              "Refresh triggered. Please wait a minute and try again."
-            )
-            NULL
-          },
-          error = function(chromote_error) {
-            message("Chromote failed: ", chromote_error$message)
-          },
-          finally = {
-            if (!is.null(b)) {
-              tryCatch(b$close(), error = function(e) NULL)
-            }
-          }
-        )
-      } else {
+      if (!grepl("empty body", e$message, ignore.case = TRUE)) {
         stop(e, call. = FALSE)
       }
+      message(
+        "GitHub returned an empty response. Attempting automatic refresh using chromote..."
+      )
+      refreshed <<- tryCatch(
+        refresh_with_chromote(contributors_url),
+        error = function(chromote_error) {
+          message("Chromote failed: ", chromote_error$message)
+          FALSE
+        }
+      )
+      # signal to caller: "I tried to refresh"
+      NULL
     }
   )
 
-  # If body is NULL (chromote triggered refresh), retry the request
-  if (is.null(body)) {
+  # If body is NULL *and* we actually attempted a refresh, retry once
+  if (is.null(body) && refreshed) {
+    message("Retrying GitHub request after automatic refresh...")
+    Sys.sleep(5)
     resp <- paste0(contributors_url, "-data") |>
       httr2::request() |>
       httr2::req_headers(
         "x-requested-with" = "XMLHttpRequest",
-        accept = "appliacation/json"
+        accept = "application/json"
       ) |>
       httr2::req_perform()
 
@@ -121,8 +113,8 @@ get_contributions_single <- function(repo, user) {
       httr2::resp_body_json(resp, simplifyVector = TRUE, check_type = FALSE),
       error = function(e) {
         stop(
-          "GitHub returned an empty response. Please visit the following URL in ",
-          "your browser to manually trigger a data refresh:\n\n  ",
+          "GitHub returned an empty response even after automatic refresh. ",
+          "Please visit the following URL in your browser to manually trigger a data refresh:\n\n  ",
           contributors_url,
           "\n\nOnce the page finishes loading, run this function again.",
           call. = FALSE
@@ -138,4 +130,26 @@ get_contributions_single <- function(repo, user) {
     dplyr::arrange(dplyr::desc("a"), dplyr::desc("d"), dplyr::desc("c")) |>
     dplyr::rename(added = "a", deleted = "d", commit = "c") |>
     as.data.frame()
+}
+
+refresh_with_chromote <- function(
+  url,
+  idle_timeout = 5,
+  poll_every = 0.1,
+  extra_wait = 1
+) {
+  b <- chromote::ChromoteSession$new()
+  on.exit(try(b$close(), silent = TRUE), add = TRUE)
+  b$Network$enable()
+  b$Page$navigate(url)
+  b$Page$loadEventFired()
+  idle <- FALSE
+  b$Network$loadingFinished(function(...) idle <<- TRUE)
+  t0 <- Sys.time()
+  while (!idle && as.numeric(Sys.time() - t0) < idle_timeout) {
+    Sys.sleep(poll_every)
+  }
+  Sys.sleep(extra_wait)
+  message("Refresh triggered. Please wait a minute and try again.")
+  invisible(TRUE)
 }

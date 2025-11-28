@@ -28,7 +28,8 @@ library(githubContributors)
 
 report <- get_contributions("report", user = "easystats")
 order_authors(report)
-#> DominiqueMakowski, strengejacke, IndrajeetPatil, rempsyc, bwiernik, mattansb
+#> DominiqueMakowski, strengejacke, IndrajeetPatil, rempsyc, 
+#> bwiernik, mattansb
 #>             username  added deleted commit  score
 #> 1  DominiqueMakowski 203778  148154    325 351932
 #> 18      strengejacke   5798   38360    234  44158
@@ -39,7 +40,8 @@ order_authors(report)
 
 datawizard <- get_contributions("datawizard", user = "easystats")
 order_authors(datawizard)
-#> IndrajeetPatil, strengejacke, etiennebacher, bwiernik, DominiqueMakowski, rempsyc, mattansb
+#> IndrajeetPatil, strengejacke, etiennebacher, bwiernik, 
+#> DominiqueMakowski, rempsyc, mattansb
 #>            username added deleted commit score
 #> 2    IndrajeetPatil 47402   30891    336 78293
 #> 7      strengejacke 34002   10809    503 44811
@@ -51,7 +53,8 @@ order_authors(datawizard)
 
 performance <- get_contributions("performance", user = "easystats")
 order_authors(performance)
-#> strengejacke, DominiqueMakowski, IndrajeetPatil, rempsyc, mattansb, bwiernik, etiennebacher
+#> strengejacke, DominiqueMakowski, IndrajeetPatil, rempsyc, 
+#> mattansb, bwiernik, etiennebacher
 #>             username added deleted commit  score
 #> 15      strengejacke 67884   61034   1426 128918
 #> 2  DominiqueMakowski 50278   25317    141  75595
@@ -70,7 +73,8 @@ order_authors(lavaan)
 
 dplyr <- get_contributions("dplyr", user = "tidyverse")
 order_authors(dplyr)
-#> romainfrancois, hadley, krlmlr, DavisVaughan, lionel-, batpigandme, hannes, zeehio, jennybc
+#> romainfrancois, hadley, krlmlr, DavisVaughan, lionel-, 
+#> batpigandme, hannes, zeehio, jennybc
 #>           username  added deleted commit   score
 #> 81  romainfrancois 895054  901061   2737 1796115
 #> 41          hadley 198717  216820   1987  415537
@@ -84,7 +88,10 @@ order_authors(dplyr)
 
 ggplot2 <- get_contributions("ggplot2", user = "tidyverse")
 order_authors(ggplot2)
-#> hadley, thomasp85, topepo, lionel-, wch, clauswilke, krlmlr, dpseidel, karawoo, teunbrand, kohske, paleolimbot, yutannihilation, mine-cetinkaya-rundel, jiho, hrbrmstr, JakeRuss, batpigandme
+#> hadley, thomasp85, topepo, lionel-, wch, clauswilke, 
+#> krlmlr, dpseidel, karawoo, teunbrand, kohske, paleolimbot, 
+#> yutannihilation, mine-cetinkaya-rundel, jiho, hrbrmstr, 
+#> JakeRuss, batpigandme
 #>                  username  added deleted commit  score
 #> 41                 hadley 344336  253389   2274 597725
 #> 90              thomasp85 127149  118915    296 246064
@@ -108,13 +115,7 @@ order_authors(ggplot2)
 
 ## Troubleshooting
 
-If you get the following error:
-
-    Error in `resp_body_raw()`:
-    ! Can not retrieve empty body
-
-Please visit the GitHub page on a browser to manually update the data.
-Once the new data is loaded, try again, it should work.
+If you get an error, please visit the GitHub page on a browser to manually update the data. Once the new data is loaded, try again, it should work.
 
 ## Credits
 

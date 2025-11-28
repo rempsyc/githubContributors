@@ -45,9 +45,6 @@ order_authors(datawizard)
 performance <- get_contributions("performance", user = "easystats")
 order_authors(performance)
 
-lavaan <- get_contributions("lavaan", user = "yrosseel")
-order_authors(lavaan)
-
 dplyr <- get_contributions("dplyr", user = "tidyverse")
 order_authors(dplyr)
 
@@ -58,14 +55,7 @@ order_authors(ggplot2)
 
 ## Troubleshooting
 
-If you get the following error:
-
-```
-Error in `resp_body_raw()`:
-! Can not retrieve empty body
-```
-
-Please visit the GitHub page on a browser to manually update the data. Once the new data is loaded, try again, it should work.
+If you get an error, please visit the GitHub page on a browser to manually update the data. Once the new data is loaded, try again, it should work.
 
 ## Credits
 
