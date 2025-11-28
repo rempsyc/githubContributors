@@ -54,10 +54,9 @@ get_contributions <- function(repo, user = "easystats") {
             b$Page$loadEventFired()
             Sys.sleep(5)
             message(
-              "Refresh triggered. Please wait a minute and try again. Alternatively: ",
-              manual_attempt
+              "Refresh triggered. Please wait a minute and try again."
             )
-            return(NULL)
+            NULL
           },
           error = function(chromote_error) {
             message("Chromote failed: ", chromote_error$message)
@@ -68,14 +67,8 @@ get_contributions <- function(repo, user = "easystats") {
             }
           }
         )
-
-        stop(
-          "GitHub returned an empty response. ",
-          manual_attempt,
-          call. = FALSE
-        )
       } else {
-        stop(e)
+        stop(e, call. = FALSE)
       }
     }
   )
