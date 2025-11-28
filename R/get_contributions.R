@@ -12,6 +12,7 @@
 #'   of data frames, one for each repository.
 #' @source https://stackoverflow.com/a/75277425/9370662
 #'
+#' @importFrom rlang .data
 #' @examples
 #' head(get_contributions("report"))
 #' @export
@@ -28,6 +29,7 @@ get_contributions <- function(repo, user = "easystats") {
       call. = FALSE
     )
   }
+
   if (any(repo == "")) {
     stop(
       "'repo' contains empty strings. Please provide valid repository names.",
@@ -44,10 +46,10 @@ get_contributions <- function(repo, user = "easystats") {
   get_contributions_single(repo, user)
 }
 
+
 #' Get contributions for a single repository (internal helper)
 #' @noRd
 get_contributions_single <- function(repo, user) {
-  path <- NULL
   contributors_url <- paste0(
     "https://github.com/",
     user,
@@ -56,64 +58,59 @@ get_contributions_single <- function(repo, user) {
     "/graphs/contributors"
   )
 
-  resp <- paste0(contributors_url, "-data") |>
-    httr2::request() |>
-    httr2::req_headers(
-      "x-requested-with" = "XMLHttpRequest",
-      accept = "appliacation/json"
-    ) |>
-    httr2::req_perform()
-
-  manual_attempt <- paste(
-    "Please visit the following URL in ",
-    "your browser to manually trigger a data refresh:\n\n  ",
+  manual_attempt <- paste0(
+    "Please visit the following URL in your browser to manually trigger a data refresh:\n\n  ",
     contributors_url,
     "\n\nOnce the page finishes loading, run this function again."
   )
 
+  # First attempt: direct JSON
+  resp <- paste0(contributors_url, "-data") |>
+    httr2::request() |>
+    httr2::req_headers(
+      "x-requested-with" = "XMLHttpRequest",
+      accept = "application/json"
+    ) |>
+    httr2::req_perform()
+
+  refreshed <- FALSE
+
   body <- tryCatch(
     httr2::resp_body_json(resp, simplifyVector = TRUE, check_type = FALSE),
     error = function(e) {
-      if (grepl("empty body", e$message, ignore.case = TRUE)) {
-        # Try to trigger refresh using chromote if available
-
-        message(
-          "GitHub returned an empty response. Attempting automatic refresh using chromote..."
-        )
-        b <- NULL
-        tryCatch(
-          {
-            b <- chromote::ChromoteSession$new()
-            b$Page$navigate(contributors_url)
-            b$Page$loadEventFired()
-            Sys.sleep(5)
-            message(
-              "Refresh triggered. Please wait a minute and try again."
-            )
-            NULL
-          },
-          error = function(chromote_error) {
-            message("Chromote failed: ", chromote_error$message)
-          },
-          finally = {
-            if (!is.null(b)) {
-              tryCatch(b$close(), error = function(e) NULL)
-            }
-          }
-        )
-      } else {
+      if (!grepl("empty body", e$message, ignore.case = TRUE)) {
         stop(e, call. = FALSE)
       }
+
+      message(
+        "GitHub returned an empty response. Attempting automatic refresh using Chromote..."
+      )
+
+      refreshed <<- tryCatch(
+        refresh_with_chromote(contributors_url),
+        error = function(chromote_error) {
+          message("Chromote failed: ", chromote_error$message)
+          FALSE
+        }
+      )
+
+      # Signal to caller: "no JSON yet"
+      NULL
     }
   )
 
-  # If body is NULL (chromote triggered refresh), retry the request
-  if (is.null(body)) {
+  # If body is NULL *and* refresh was attempted, retry once after a short delay
+  if (is.null(body) && isTRUE(refreshed)) {
+    message(
+      "Retrying GitHub contributors-data request after automatic refresh..."
+    )
+    Sys.sleep(5) # give GitHub some time to regenerate the JSON endpoint
+
     resp <- paste0(contributors_url, "-data") |>
       httr2::request() |>
       httr2::req_headers(
         "x-requested-with" = "XMLHttpRequest",
-        accept = "appliacation/json"
+        accept = "application/json"
       ) |>
       httr2::req_perform()
 
@@ -121,21 +118,89 @@ get_contributions_single <- function(repo, user) {
       httr2::resp_body_json(resp, simplifyVector = TRUE, check_type = FALSE),
       error = function(e) {
         stop(
-          "GitHub returned an empty response. Please visit the following URL in ",
-          "your browser to manually trigger a data refresh:\n\n  ",
-          contributors_url,
-          "\n\nOnce the page finishes loading, run this function again.",
+          "GitHub returned an empty response even after automatic refresh.\n\n",
+          manual_attempt,
           call. = FALSE
         )
       }
     )
   }
 
+  # If still NULL and we didn’t refresh (e.g., chromote not installed), fail nicely
+  if (is.null(body)) {
+    stop(
+      "GitHub returned an empty response and automatic refresh was not possible.\n\n",
+      manual_attempt,
+      call. = FALSE
+    )
+  }
+
   body |>
     tidyr::unnest(dplyr::everything()) |>
-    dplyr::group_by(username = stringr::str_remove(path, "/")) |>
-    dplyr::summarise(dplyr::across("a":"c", sum)) |>
-    dplyr::arrange(dplyr::desc("a"), dplyr::desc("d"), dplyr::desc("c")) |>
+    dplyr::group_by(username = stringr::str_remove(.data$path, "/")) |>
+    dplyr::summarise(
+      dplyr::across(dplyr::all_of(c("a", "c", "d")), sum),
+      .groups = "drop"
+    ) |>
+    dplyr::arrange(
+      dplyr::desc(.data$a),
+      dplyr::desc(.data$d),
+      dplyr::desc(.data$c)
+    ) |>
     dplyr::rename(added = "a", deleted = "d", commit = "c") |>
     as.data.frame()
+}
+
+
+refresh_with_chromote <- function(url, max_wait = 15, check_every = 0.3) {
+  if (!requireNamespace("chromote", quietly = TRUE)) {
+    message("chromote is not installed; cannot auto-refresh via browser.")
+    return(FALSE)
+  }
+
+  b <- chromote::ChromoteSession$new()
+  on.exit(try(b$close(), silent = TRUE), add = TRUE)
+
+  b$Page$navigate(url)
+  b$Page$loadEventFired()
+
+  # Wait until the page height stops changing (handles long contributor pages)
+  message(
+    "Waiting for GitHub contributors page to finish loading in Chromote..."
+  )
+  last_h <- -1
+  stable <- 0
+  t0 <- Sys.time()
+
+  repeat {
+    h <- try(
+      b$Runtime$evaluate("document.body.scrollHeight")$result$value,
+      silent = TRUE
+    )
+
+    if (inherits(h, "try-error")) {
+      # if the session dies unexpectedly, bail out
+      break
+    }
+
+    if (is.numeric(h) && h == last_h) {
+      stable <- stable + 1
+    } else {
+      stable <- 0
+      last_h <- h
+    }
+
+    # 5 consecutive stable checks ≈ "page finished expanding"
+    if (stable >= 5) {
+      break
+    }
+    if (as.numeric(Sys.time() - t0, units = "secs") > max_wait) {
+      break
+    }
+
+    Sys.sleep(check_every)
+  }
+
+  message("Refresh triggered via Chromote; GitHub page appears fully loaded.")
+  TRUE
 }

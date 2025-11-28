@@ -26,7 +26,10 @@ order_authors <- function(data, commit.weight = 0, cutoff = 1000) {
   if (is.list(data) && !is.data.frame(data)) {
     # Input validation for list
     if (length(data) == 0) {
-      stop("'data' is an empty list. Please provide at least one data frame.", call. = FALSE)
+      stop(
+        "'data' is an empty list. Please provide at least one data frame.",
+        call. = FALSE
+      )
     }
     if (!all(vapply(data, is.data.frame, logical(1)))) {
       stop("All elements of 'data' must be data frames.", call. = FALSE)
@@ -34,7 +37,11 @@ order_authors <- function(data, commit.weight = 0, cutoff = 1000) {
     for (i in seq_along(data)) {
       missing_cols <- setdiff(required_cols, names(data[[i]]))
       if (length(missing_cols) > 0) {
-        elem_name <- if (!is.null(names(data)[i])) names(data)[i] else as.character(i)
+        elem_name <- if (!is.null(names(data)[i])) {
+          names(data)[i]
+        } else {
+          as.character(i)
+        }
         stop(
           sprintf(
             "Data frame '%s' is missing required columns: %s",
@@ -45,7 +52,9 @@ order_authors <- function(data, commit.weight = 0, cutoff = 1000) {
         )
       }
     }
-    results <- lapply(data, function(d) order_authors_single(d, commit.weight, cutoff))
+    results <- lapply(data, function(d) {
+      order_authors_single(d, commit.weight, cutoff)
+    })
     names(results) <- names(data)
     return(results)
   }
@@ -57,7 +66,10 @@ order_authors <- function(data, commit.weight = 0, cutoff = 1000) {
   missing_cols <- setdiff(required_cols, names(data))
   if (length(missing_cols) > 0) {
     stop(
-      sprintf("'data' is missing required columns: %s", paste(missing_cols, collapse = ", ")),
+      sprintf(
+        "'data' is missing required columns: %s",
+        paste(missing_cols, collapse = ", ")
+      ),
       call. = FALSE
     )
   }
@@ -71,6 +83,6 @@ order_authors_single <- function(data, commit.weight, cutoff) {
   data$score <- data$added + abs(data$deleted) + data$commit * commit.weight
   data <- data[order(data$score, decreasing = TRUE), ]
   data <- data[data$score >= cutoff, ]
-  cat(toString(data$username), "\n\n")
+  cat(insight::format_message(toString(data$username)), "\n\n")
   data
 }
